@@ -34,10 +34,10 @@ class Net_SDE_Pro(nn.Module):
         self.lamdb = heston_info[3]
         
         #Input to each coefficient (NN) will be (t,S_t,V_t)
-        self.drift = Net_Timestep(n_dim = n_dim+2, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
-        self.diffusion =Net_Timestep(n_dim = n_dim+2, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
-        self.driftV = Net_Timestep(n_dim = n_dim+2, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
-        self.diffusionV = Net_Timestep(n_dim = n_dim+2, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
+        self.drift = Net_Timestep(n_dim = n_dim, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
+        self.diffusion =Net_Timestep(n_dim = n_dim, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
+        self.driftV = Net_Timestep(n_dim = n_dim, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
+        self.diffusionV = Net_Timestep(n_dim = n_dim, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
         
     def forward(self,  indices, z,z1, MC_samples): 
         S_old = torch.repeat_interleave(self.S0, MC_samples, dim=0)
