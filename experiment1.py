@@ -117,7 +117,7 @@ timegrid = torch.linspace(0,1,n_steps+1)
 indices = torch.tensor([30,60,90,120,150,180,240,270,300,360])    
 target=torch.cat([OTM_call, ITM_call],0)
 
-model = Net_SDE(asset_info = asset_info, n_dim = 1,timegrid = timegrid,
+model = Net_SDE(asset_info = asset_info, n_dim = 3,timegrid = timegrid,
                 strikes_call = strikes_call,strikes_put = strikes_put,n_layers= 2,vNetWidth = 20,device = device)
 
 print("==="*10+"training the neural sde model"+"==="*10)
@@ -131,7 +131,7 @@ torch.save(model, model_path+"ex1_nsde.pth")
 
 heston_info = [-0.7, 0.04, 1.5, 0.3]
 
-model_pro = Net_SDE_Pro(heston_info,asset_info,1,timegrid,strikes_call,
+model_pro = Net_SDE_Pro(heston_info,asset_info,3,timegrid,strikes_call,
                         strikes_put,n_layers=2,vNetWidth = 20,device=device)
 
 print("==="*10+"training the neural sde pro model"+"==="*10)

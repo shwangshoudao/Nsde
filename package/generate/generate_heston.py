@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.optimize import least_squares
 
-
 def heston(S0,V0,r,x,input):
     """generate heston function
 
@@ -9,22 +8,23 @@ def heston(S0,V0,r,x,input):
         S0 (float): initial asset price
         V0 (float): initial volatility
         r (float): risk free rate
-        x (4*1 numpy array): 1. kappa 2. theta 3. lambda  4. rho
+        x (4*1 numpy array): 1. rho 2. theta 3. kappa 4. lambda
         input (n*2 numpy array): the first column is maturity date and the second column is the strike price
 
     Returns:
         option price: option price of the given input
     """
-    kappa = x[0]
+    rho = x[0]
     theta = x[1]
+    kappa = x[2]
     lambd = x[2]
-    rho = x[3]
-    T = input[0]
-    K = input[1]
+    
+    input = np.array(input)
+    T = input[:,0]
+    K = input[:,1]
     I=complex(0,1)
     P, umax, N = 0, 1000, 10000
     du=umax/N
-    
     aa= theta*kappa*T/lambd**2
     bb= -2*theta*kappa/lambd**2
     for i in range (1,N):
@@ -45,6 +45,8 @@ def heston(S0,V0,r,x,input):
         P+= ((phi1-phi2)/(u2*I))*du
     return K*np.real((S0/K-np.exp(-r*T))/2+P/np.pi)
 
+
+
 if __name__ == "__main__":
     ## setting
     S0 = 95
@@ -57,13 +59,13 @@ if __name__ == "__main__":
     
     ##generate data
     input = np.array([[1,1,1,1,2,2,2,2,3,3,3,3],[90,95,100,110,90,95,100,110,90,95,100,110]])
-    
+    input = input.T
     y_train = heston(S0,V0,r,[kappa,theta,lambd,rho],input)
     
     ## calibration
     def fun(x,input,y):
         return heston(S0,V0,r,x,input) - y
-    x0 = np.array([1.3, 0.05, 0.6, 1])
+    x0 = np.array([-0.5, 0.03, 1.3, 0.3])
     res_lsq = least_squares(fun, x0, args=(input, y_train))
     
     print(res_lsq.x)

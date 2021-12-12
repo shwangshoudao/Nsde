@@ -30,10 +30,10 @@ class Net_SDE(nn.Module):
         
         
         #Input to each coefficient (NN) will be (t,S_t,V_t)
-        self.drift = Net_Timestep(n_dim=n_dim+2, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
-        self.diffusion =Net_Timestep(n_dim=n_dim+2, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
-        self.driftV = Net_Timestep(n_dim=n_dim+2, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
-        self.diffusionV = Net_Timestep(n_dim=n_dim+2, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
+        self.drift = Net_Timestep(n_dim=n_dim, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
+        self.diffusion =Net_Timestep(n_dim=n_dim, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
+        self.driftV = Net_Timestep(n_dim=n_dim, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
+        self.diffusionV = Net_Timestep(n_dim=n_dim, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
         
     def forward(self, indices, z,z1, MC_samples): 
         S_old = torch.repeat_interleave(self.S0, MC_samples, dim=0).to(device=self.device)
@@ -80,7 +80,7 @@ class Net_SDE(nn.Module):
 
                     # Since we use the same number of maturities for vanilla calls and puts: 
                     
-                    price = torch.cat([S_old-K_extended,zeros],1) #call OTM
+                    price =  torch.cat([S_old-K_extended,zeros],1) #call OTM
                     
                     # Discounting assumes we use 2-year time horizon 
                     price = torch.max(price, 1, keepdim=True)[0]*torch.exp(-self.rate*1*i/n_steps)
