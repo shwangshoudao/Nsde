@@ -117,9 +117,11 @@ class vg(nn.Module):
     
 
 if __name__ == "__main__":
+    import os
     
-    ## setting
     device = "cpu"
+    path = os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)), "../.."))
+    ## setting
     
     MC_samples=50000
     n_steps=360
@@ -157,9 +159,9 @@ if __name__ == "__main__":
     Call_ITM_Unit=Z2[20:30,:]
     Put_ITM_Unit=Z2[30:40,:]
 
-    torch.save(Call_OTM_Unit,'Call_OTM_VG_test.pt')
-    torch.save(Put_OTM_Unit,'Put_OTM_VG_test.pt')
-    torch.save(Call_ITM_Unit,'Call_ITM_VG_test.pt')
-    torch.save(Put_ITM_Unit,'Put_ITM_VG_test.pt')  
+    torch.save(Call_OTM_Unit,path+'/data/Call_OTM_VG_test.pt')
+    torch.save(Put_OTM_Unit,path+'/data/Put_OTM_VG_test.pt')
+    torch.save(Call_ITM_Unit,path+'/data/Call_ITM_VG_test.pt')
+    torch.save(Put_ITM_Unit,path+'/data/Put_ITM_VG_test.pt')  
     
     
