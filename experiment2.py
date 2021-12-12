@@ -142,9 +142,7 @@ for j in range(len(indices)):
 def fun(x,asset_input,y):
     return heston(S0,V0,r,x,asset_input) - y
 
-S0 = torch.ones(1, 1)*100
-V0 = torch.ones(1,1)*0.04
-rate = torch.ones(1, 1)*0.032
+
 
 x0 = np.array([-0.3, 0.03, 1.3, 0.3])
 res_lsq = least_squares(fun, x0, args=(asset_input, target.ravel().numpy()))
@@ -153,6 +151,7 @@ heston_info = res_lsq.x
 print( "*"*20,"The calibrated heston model params: \
         rho = {},theta = {}, kappa = {} and lambda = {}".format(heston_info[0],heston_info[1],\
         heston_info[2],heston_info[3]),"*"*20)
+
 
 model_pro = Net_SDE_Pro(heston_info,asset_info,3,timegrid,strikes_call,
                         strikes_put,n_layers=2,vNetWidth = 20,device=device)
