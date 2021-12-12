@@ -161,13 +161,13 @@ print("The loss for nsde pro:    ",loss_fn(pred_pro,target))
 
 ## save picture
 fig,ax = plt.subplots()
-ax.plot(np.arange(1,501),losses[0:500])
+ax.plot(np.arange(1,501),losses_val[0:500])
 ax.set(xlabel='iteration',ylabel='loss')
 ax.set_title('loss for NSDE')
 plt.savefig(picture_path+"ex1_NSDE_loss.png")
 
 fig,ax = plt.subplots()
-ax.plot(np.arange(1,501),losses_pro[0:500])
+ax.plot(np.arange(1,501),losses_val_pro[0:500])
 ax.set(xlabel='iteration',ylabel='loss')
 ax.set_title('loss for NSDE_PRO')
 plt.savefig(picture_path+"ex1_NSDE_PRO_loss.png")
