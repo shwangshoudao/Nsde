@@ -5,7 +5,7 @@ from model import Net_Timestep
 
 class Net_SDE(nn.Module):
     
-    def __init__(self, asset_info, n_dim, timegrid, strikes_call, strikes_put, n_layers, vNetWidth, device):   
+    def __init__(self, asset_info, n_dim, timegrid, n_layers, vNetWidth, device):   
         """SDE的模型
 
         Args:
@@ -22,8 +22,6 @@ class Net_SDE(nn.Module):
         self.n_dim = n_dim
         self.timegrid = timegrid
         self.device = device
-        self.strikes_call = strikes_call
-        self.strikes_put = strikes_put
         self.S0 = asset_info[0]
         self.V0 = asset_info[1]
         self.rate = asset_info[2]
@@ -35,11 +33,11 @@ class Net_SDE(nn.Module):
         self.driftV = Net_Timestep(n_dim=n_dim, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
         self.diffusionV = Net_Timestep(n_dim=n_dim, n_out=1, n_layers=n_layers, vNetWidth=vNetWidth)
         
-    def forward(self, indices, z,z1, MC_samples): 
+    def forward(self,strikes_call, strikes_put, indices, z,z1, MC_samples): 
         S_old = torch.repeat_interleave(self.S0, MC_samples, dim=0).to(device=self.device)
         V_old = torch.repeat_interleave(self.V0, MC_samples, dim=0).to(device=self.device)  
-        K_call = self.strikes_call
-        K_put = self.strikes_put
+        K_call = strikes_call
+        K_put = strikes_put
         zeros = torch.repeat_interleave(torch.zeros(1,1), MC_samples, dim=0).to(device=self.device)
         average_SS = torch.Tensor().to(device=self.device)
         average_SS1 = torch.Tensor().to(device=self.device)
