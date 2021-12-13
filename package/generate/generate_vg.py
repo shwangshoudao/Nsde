@@ -129,9 +129,9 @@ if __name__ == "__main__":
     mu = 0.1686
     sigma = 0.1213
     iter_count = 11
-    Z2 = np.zeros((40,9))
-    strikes_put=np.arange(60, 101, 2.5).tolist()
-    strikes_call=np.arange(100, 141, 2.5).tolist()
+    Z2 = np.zeros((40,17))
+    strikes_put = np.arange(60, 101, 2.5).tolist()
+    strikes_call = np.arange(100, 141, 2.5).tolist()
     n_steps=360
     timegrid = torch.linspace(0,1,n_steps+1) 
     h = timegrid[1]-timegrid[0]
@@ -142,22 +142,21 @@ if __name__ == "__main__":
     
     ## generate
     
-    for i in range(1,iter_count):
-        np.random.seed(i)
-        z_1 = np.random.normal(size=(MC_samples, n_steps))
-        z_1 = np.append(z_1,-z_1,axis=0)
-        gamma = np.random.gamma(h/mu,mu,size=(2*MC_samples, n_steps))
-        print('current batch of milion samples:', i)
-        model=model.to(device=device)
-        Z=model(S0, rate, indices, z_1,gamma, 2*MC_samples).float().to(device=device)
-        Z=Z.detach().to(device='cpu').numpy()/(iter_count-1)
-        Z2=Z2+Z 
+
+   
+    z_1 = np.random.normal(size=(MC_samples, n_steps))
+    z_1 = np.append(z_1,-z_1,axis=0)
+    gamma = np.random.gamma(h/mu,mu,size=(2*MC_samples, n_steps))
+    model=model.to(device=device)
+    Z=model(S0, rate, indices, z_1,gamma, 2*MC_samples).float().to(device=device)
+
         
     ## saving
-    Call_OTM_Unit=Z2[0:20,:]
-    Put_OTM_Unit=Z2[20:40,:]
-    Call_ITM_Unit=Z2[40:60,:]
-    Put_ITM_Unit=Z2[60:80,:]
+    Call_OTM_Unit=Z[0:10,:]
+    Put_OTM_Unit=Z[10:20,:]
+    Call_ITM_Unit=Z[20:30,:]
+    Put_ITM_Unit=Z[30:40,:]
+    
 
     torch.save(Call_OTM_Unit,path+'/data/Call_OTM_VG_test.pt')
     torch.save(Put_OTM_Unit,path+'/data/Put_OTM_VG_test.pt')
