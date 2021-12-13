@@ -53,7 +53,7 @@ def train_models(model,target,n_steps,option_info,indices,MC_samples,seedused=1)
         
 #evaluate and print RMSE validation error at the start of each epoch
         optimizer.zero_grad()
-        pred = model( indices, z_1,z_2, 2*MC_samples).detach()
+        pred = model(strikes_call,strikes_put, indices, z_1,z_2, 2*MC_samples).detach()
         loss_val=torch.sqrt(loss_fn(pred, target))
         print('validation {}, loss={}'.format(itercount, loss_val.item()))
 
@@ -69,7 +69,7 @@ def train_models(model,target,n_steps,option_info,indices,MC_samples,seedused=1)
             batch_x=z_1[indices2,:]
             batch_y=z_2[indices2,:]         
             optimizer.zero_grad()
-            pred = model(indices, batch_x,batch_y,batch_size)
+            pred = model(strikes_call,strikes_put, indices, z_1,z_2, 2*MC_samples)
             loss=torch.sqrt(loss_fn(pred, target))
             losses.append(loss.clone().detach())
             itercount += 1
@@ -92,10 +92,10 @@ picture_path = path + "/result_picture/"
 data_path = path + "/data/"
 loss_path = path + "/result_loss/"
 
-ITM_call= torch.Tensor(torch.load(data_path+'Call_ITM_VG_test.pt')).to(device=device)
-ITM_put= torch.Tensor(torch.load(data_path+'Put_ITM_VG_test.pt')).to(device=device)
-OTM_call= torch.Tensor(torch.load(data_path+'Call_OTM_VG_test.pt')).to(device=device)
-OTM_put = torch.Tensor(torch.load(data_path+'Put_OTM_VG_test.pt')).to(device=device)
+ITM_call= torch.Tensor(torch.load(data_path+'Call_ITM_VG_train.pt')).to(device=device)
+ITM_put= torch.Tensor(torch.load(data_path+'Put_ITM_VG_train.pt')).to(device=device)
+OTM_call= torch.Tensor(torch.load(data_path+'Call_OTM_VG_train.pt')).to(device=device)
+OTM_put = torch.Tensor(torch.load(data_path+'Put_OTM_VG_train.pt')).to(device=device)
 
 ## settings
 MC_samples = 5000
@@ -115,7 +115,7 @@ indices = torch.tensor([30,60,90,120,150,180,240,270,300,360])
 target=torch.cat([OTM_call, ITM_call],0)
 
 model = Net_SDE(asset_info = asset_info, n_dim = 3,timegrid = timegrid,
-                strikes_call = strikes_call,strikes_put = strikes_put,n_layers= 2,vNetWidth = 20,device = device)
+                n_layers= 2,vNetWidth = 20,device = device)
 
 print("==="*10+"training the neural sde model"+"==="*10)
 model,losses, losses_val=train_models(model,target,n_steps,option_info ,indices,MC_samples)
@@ -174,12 +174,32 @@ z_1 = torch.tensor(z_1).to(device=device).float()
 z_2 = torch.tensor(z_2).to(device=device).float()
 
 
-pred = model(indices, z_1,z_2, 2*MC_samples).detach()
-pred_pro = model_pro(indices, z_1,z_2, 2*MC_samples).detach()
+pred = model(strikes_call, strikes_put,indices, z_1,z_2, 2*MC_samples).detach()
+pred_pro = model_pro(strikes_call, strikes_put,indices, z_1,z_2, 2*MC_samples).detach()
 
-loss_fn = nn.MSELoss() 
-print("The loss for nsde:    ",loss_fn(pred,target))
-print("The loss for nsde pro:    ",loss_fn(pred_pro,target))
+loss_fn = nn.L1Loss() 
+print("The train loss for nsde:    ",loss_fn(pred,target))
+print("The train loss for nsde pro:    ",loss_fn(pred_pro,target))
+
+strikes_call_test = np.arange(60, 101, 2.5).tolist()
+strikes_put_test = np.arange(100, 141, 2.5).tolist()
+pred_test = model(strikes_call_test, strikes_put_test,indices, z_1,z_2, 2*MC_samples).detach()
+pred_pro_test = model_pro(strikes_call_test, strikes_put_test,indices, z_1,z_2, 2*MC_samples).detach()
+
+ITM_call_test = torch.Tensor(torch.load(data_path+'Call_ITM_VG_test.pt')).to(device=device)
+OTM_call_test = torch.Tensor(torch.load(data_path+'Call_OTM_VG_test.pt')).to(device=device)
+target_test = torch.cat([OTM_call_test, ITM_call_test],0)
+
+nsde_test_loss = (loss_fn(pred_test,target_test)*target_test.shape[0]*target_test.shape[1]
+                  -loss_fn(pred,target)*target.shape[0]*target.shape[1])/\
+                 (target_test.shape[0]*target_test.shape[1]-target.shape[0]*target.shape[1])
+nsde_pro_test_loss = (loss_fn(pred_pro_test,target_test)*target_test.shape[0]*target_test.shape[1]
+                  -loss_fn(pred_pro,target)*target.shape[0]*target.shape[1])/\
+                 (target_test.shape[0]*target_test.shape[1]-target.shape[0]*target.shape[1])
+
+print("The test loss for nsde:  ",)
+print("The test loss for nsde pro:    ",loss_fn(pred_pro_test,target_test))
+
 
 ## save picture
 fig,ax = plt.subplots()
