@@ -98,7 +98,7 @@ OTM_call= torch.Tensor(torch.load(data_path+'Call_OTM_VG_train.pt')).to(device=d
 OTM_put = torch.Tensor(torch.load(data_path+'Put_OTM_VG_train.pt')).to(device=device)
 
 ## settings
-MC_samples = 5000
+MC_samples = 2500
 strikes_put=np.arange(60, 101, 5).tolist()
 strikes_call=np.arange(100, 141, 5).tolist()
 S0 = torch.ones(1, 1)*100

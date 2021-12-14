@@ -124,15 +124,15 @@ if __name__ == "__main__":
     n_steps=360
     rho = -0.7
     Z2=np.zeros((40,9))
-    strikes_put=np.arange(60, 101, 5).tolist()
-    strikes_call=np.arange(100, 141, 5).tolist()
+    strikes_put=np.arange(60, 101, 2.5).tolist()
+    strikes_call=np.arange(100, 141, 2.5).tolist()
     n_steps=360
     timegrid = torch.linspace(0,1,n_steps+1) 
     indices = torch.tensor([30,60,90,120,150,180,240,270,300,360])  
     model = heston_modified(timegrid=timegrid, strikes_call=strikes_call,strikes_put=strikes_put, device=device)
     S0 = torch.ones(1, 1)*100
-    V0 = torch.ones(1,1)*0.034/22
-    rate = torch.ones(1, 1)*0.032/365
+    V0 = torch.ones(1,1)*0.034
+    rate = torch.ones(1, 1)*0.032
     
     
     ## generate
@@ -155,7 +155,7 @@ if __name__ == "__main__":
     Call_ITM_Unit=Z[20:30,:]
     Put_ITM_Unit=Z[30:40,:]
     
-    torch.save(Call_OTM_Unit,path+'/data/Call_OTM_modified_Heston.pt')
-    torch.save(Put_OTM_Unit,path+'/data/Put_OTM_modified_Heston.pt')
-    torch.save(Call_ITM_Unit,path+'/data/Call_ITM_modified_Heston.pt')
-    torch.save(Put_ITM_Unit,path+'/data/Put_ITM_modified_Heston.pt') 
+    torch.save(Call_OTM_Unit,path+'/data/Call_OTM_modified_Heston_test.pt')
+    torch.save(Put_OTM_Unit,path+'/data/Put_OTM_modified_Heston_test.pt')
+    torch.save(Call_ITM_Unit,path+'/data/Call_ITM_modified_Heston_test.pt')
+    torch.save(Put_ITM_Unit,path+'/data/Put_ITM_modified_Heston_test.pt') 
