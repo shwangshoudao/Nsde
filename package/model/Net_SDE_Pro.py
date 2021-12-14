@@ -68,9 +68,7 @@ class Net_SDE_Pro(nn.Module):
                 
                 Z_new=torch.Tensor()
                 countstrikecall=-1
-                if(torch.any(torch.isnan(S_old))):
-                    print(S_old)
-                    print(torch.sum(torch.isnan(S_old)))
+
                     
             # Evaluate call (OTM) option prices 
                 

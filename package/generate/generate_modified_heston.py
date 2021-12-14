@@ -123,9 +123,8 @@ if __name__ == "__main__":
     MC_samples=200000
     n_steps=360
     rho = -0.7
-    Z2=np.zeros((40,9))
-    strikes_put=np.arange(60, 101, 5).tolist()
-    strikes_call=np.arange(100, 141, 5).tolist()
+    strikes_put=np.arange(60, 101, 2.5).tolist()
+    strikes_call=np.arange(100, 141, 2.5).tolist()
     n_steps=360
     timegrid = torch.linspace(0,1,n_steps+1) 
     indices = torch.tensor([30,60,90,120,150,180,240,270,300,360])  
@@ -149,13 +148,14 @@ if __name__ == "__main__":
     Z=Z.detach().to(device='cpu').numpy()
     
     
+    
     ## saving
     Call_OTM_Unit=Z[0:10,:]
     Put_OTM_Unit=Z[10:20,:]
     Call_ITM_Unit=Z[20:30,:]
     Put_ITM_Unit=Z[30:40,:]
     
-    torch.save(Call_OTM_Unit,path+'/data/Call_OTM_modified_Heston_train.pt')
-    torch.save(Put_OTM_Unit,path+'/data/Put_OTM_modified_Heston_train.pt')
-    torch.save(Call_ITM_Unit,path+'/data/Call_ITM_modified_Heston_train.pt')
-    torch.save(Put_ITM_Unit,path+'/data/Put_ITM_modified_Heston_train.pt') 
+    torch.save(Call_OTM_Unit,path+'/data/Call_OTM_modified_Heston_test.pt')
+    torch.save(Put_OTM_Unit,path+'/data/Put_OTM_modified_Heston_test.pt')
+    torch.save(Call_ITM_Unit,path+'/data/Call_ITM_modified_Heston_test.pt')
+    torch.save(Put_ITM_Unit,path+'/data/Put_ITM_modified_Heston_test.pt') 

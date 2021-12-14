@@ -29,8 +29,8 @@ def train_models(model,target,n_steps,option_info,indices,MC_samples,seedused=1)
     torch.manual_seed(seedused)
     np.random.seed(seedused)
     optimizer = torch.optim.Adam(model.parameters(),lr=0.001, eps=1e-08,amsgrad=False,betas=(0.9, 0.999), weight_decay=0 )
-  # optimizer= torch.optim.Rprop(model.parameters(), lr=0.001, etas=(0.5, 1.2), step_sizes=(1e-07, 1))
-    n_epochs = 100
+   #optimizer= torch.optim.Rprop(model.parameters(), lr=0.001, etas=(0.5, 1.2), step_sizes=(1e-07, 1))
+    n_epochs = 40
     itercount = 0
     losses_val = [] # for recording the loss val each epoch
     losses = [] # for recording the loss each small batch
@@ -103,7 +103,7 @@ MC_samples = 5000
 strikes_put=np.arange(60, 101, 5).tolist()
 strikes_call=np.arange(100, 141, 5).tolist()
 S0 = torch.ones(1, 1)*100
-V0 = torch.ones(1,1)*0.04
+V0 = torch.ones(1,1)*0.034
 rate = torch.ones(1, 1)*0.032
 asset_info = [S0,V0,rate]
 
@@ -116,6 +116,7 @@ timegrid = torch.linspace(0,1,n_steps+1)
 # If using n_steps=48 those corresponds to monthly maturities:
 indices = torch.tensor([30,60,90,120,150,180,240,270,300,360])    
 target=torch.cat([OTM_call, ITM_call],0)
+
 
 model = Net_SDE(asset_info = asset_info, n_dim = 3,timegrid = timegrid,
                 n_layers= 2,vNetWidth = 20,device = device)
@@ -133,6 +134,11 @@ heston_info = [-0.7, 0.04, 1.5, 0.3]
 
 model_pro = Net_SDE_Pro(heston_info,asset_info,3,timegrid,
                         n_layers=2,vNetWidth = 20,device=device)
+
+#初始化weight
+for layer in model_pro.modules():
+    if isinstance(layer, torch.nn.Linear):
+        torch.nn.init.constant_(layer.weight, val=0.0)
 
 print("==="*10+"training the neural sde pro model"+"==="*10)
 model_pro,losses_pro, losses_val_pro = train_models(model_pro,target,n_steps,option_info ,indices,MC_samples)
@@ -180,13 +186,13 @@ print("The test loss for nsde pro:  ",nsde_pro_test_loss)
 
 ## save picture
 fig,ax = plt.subplots()
-ax.plot(np.arange(1,501),losses_val[0:500])
+ax.plot(np.arange(1,201),losses_val[0:200])
 ax.set(xlabel='iteration',ylabel='loss')
 ax.set_title('loss for NSDE')
 plt.savefig(picture_path+"ex1_NSDE_loss.png")
 
 fig,ax = plt.subplots()
-ax.plot(np.arange(1,501),losses_val_pro[0:500])
+ax.plot(np.arange(1,201),losses_val_pro[0:200])
 ax.set(xlabel='iteration',ylabel='loss')
 ax.set_title('loss for NSDE_PRO')
 plt.savefig(picture_path+"ex1_NSDE_PRO_loss.png")

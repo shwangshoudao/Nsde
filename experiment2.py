@@ -31,7 +31,7 @@ def train_models(model,target,n_steps,option_info,indices,MC_samples,seedused=1)
     torch.manual_seed(seedused)
     np.random.seed(seedused)
     optimizer = torch.optim.Adam(model.parameters(),lr=0.001, eps=1e-08,amsgrad=False,betas=(0.9, 0.999), weight_decay=0 )
-  # optimizer= torch.optim.Rprop(model.parameters(), lr=0.001, etas=(0.5, 1.2), step_sizes=(1e-07, 1))
+   #optimizer= torch.optim.Rprop(model.parameters(), lr=0.001, etas=(0.5, 1.2), step_sizes=(1e-07, 1))
     n_epochs = 100
     itercount = 0
     losses_val = [] # for recording the loss val each epoch
@@ -145,8 +145,13 @@ def fun(x,asset_input,y):
 
 
 x0 = np.array([-0.3, 0.03, 1.3, 0.3])
+
+"""
+#如果用了新的数据集请将这个注释删掉，调用下面的优化，同时删掉下面的赋值
 #res_lsq = least_squares(fun, x0, args=(asset_input, target.ravel().numpy()))
 #heston_info = res_lsq.x
+"""
+
 heston_info = [0.75,0.89,2.23,0.3]
 print( "*"*20,"The calibrated heston model params: \
         rho = {},theta = {}, kappa = {} and lambda = {}".format(heston_info[0],heston_info[1],\
@@ -155,6 +160,10 @@ print( "*"*20,"The calibrated heston model params: \
 
 model_pro = Net_SDE_Pro(heston_info,asset_info,3,timegrid,
                         n_layers=2,vNetWidth = 20,device=device)
+
+for layer in model_pro.modules():
+    if isinstance(layer, torch.nn.Linear):
+        torch.nn.init.constant_(layer.weight, val=0.0)
 
 print("==="*10+"training the neural sde pro model"+"==="*10)
 model_pro,losses_pro, losses_val_pro=train_models(model_pro,target,n_steps,option_info ,indices,MC_samples)
