@@ -66,8 +66,8 @@ def train_models(model,target,n_steps,option_info,indices,MC_samples,seedused=1)
         permutation = torch.randperm(int(2*MC_samples))
         for i in range(0,2*MC_samples, batch_size):
             indices2 = permutation[i:i+batch_size]
-            batch_x=z_1[indices2,:]
-            batch_y=z_2[indices2,:]         
+            batch_x = z_1[indices2,:]
+            batch_y = z_2[indices2,:]         
             optimizer.zero_grad()
             pred = model(strikes_call,strikes_put, indices, z_1,z_2, 2*MC_samples)
             loss=torch.sqrt(loss_fn(pred, target))
@@ -98,7 +98,7 @@ OTM_call= torch.Tensor(torch.load(data_path+'Call_OTM_VG_train.pt')).to(device=d
 OTM_put = torch.Tensor(torch.load(data_path+'Put_OTM_VG_train.pt')).to(device=device)
 
 ## settings
-MC_samples = 2500
+MC_samples = 5000
 strikes_put=np.arange(60, 101, 5).tolist()
 strikes_call=np.arange(100, 141, 5).tolist()
 S0 = torch.ones(1, 1)*100
@@ -145,16 +145,16 @@ def fun(x,asset_input,y):
 
 
 x0 = np.array([-0.3, 0.03, 1.3, 0.3])
-res_lsq = least_squares(fun, x0, args=(asset_input, target.ravel().numpy()))
-heston_info = res_lsq.x
-
+#res_lsq = least_squares(fun, x0, args=(asset_input, target.ravel().numpy()))
+#heston_info = res_lsq.x
+heston_info = [0.75,0.89,2.23,0.3]
 print( "*"*20,"The calibrated heston model params: \
         rho = {},theta = {}, kappa = {} and lambda = {}".format(heston_info[0],heston_info[1],\
         heston_info[2],heston_info[3]),"*"*20)
 
 
-model_pro = Net_SDE_Pro(heston_info,asset_info,3,timegrid,strikes_call,
-                        strikes_put,n_layers=2,vNetWidth = 20,device=device)
+model_pro = Net_SDE_Pro(heston_info,asset_info,3,timegrid,
+                        n_layers=2,vNetWidth = 20,device=device)
 
 print("==="*10+"training the neural sde pro model"+"==="*10)
 model_pro,losses_pro, losses_val_pro=train_models(model_pro,target,n_steps,option_info ,indices,MC_samples)
@@ -181,8 +181,8 @@ loss_fn = nn.L1Loss()
 print("The train loss for nsde:    ",loss_fn(pred,target))
 print("The train loss for nsde pro:    ",loss_fn(pred_pro,target))
 
-strikes_call_test = np.arange(60, 101, 2.5).tolist()
-strikes_put_test = np.arange(100, 141, 2.5).tolist()
+strikes_put_test = np.arange(60, 101, 2.5).tolist()
+strikes_call_test = np.arange(100, 141, 2.5).tolist()
 pred_test = model(strikes_call_test, strikes_put_test,indices, z_1,z_2, 2*MC_samples).detach()
 pred_pro_test = model_pro(strikes_call_test, strikes_put_test,indices, z_1,z_2, 2*MC_samples).detach()
 
@@ -197,8 +197,8 @@ nsde_pro_test_loss = (loss_fn(pred_pro_test,target_test)*target_test.shape[0]*ta
                   -loss_fn(pred_pro,target)*target.shape[0]*target.shape[1])/\
                  (target_test.shape[0]*target_test.shape[1]-target.shape[0]*target.shape[1])
 
-print("The test loss for nsde:  ",)
-print("The test loss for nsde pro:    ",loss_fn(pred_pro_test,target_test))
+print("The test loss for nsde:  ",nsde_test_loss)
+print("The test loss for nsde pro:  ",nsde_pro_test_loss)
 
 
 ## save picture

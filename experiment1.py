@@ -92,10 +92,10 @@ picture_path = path + "/result_picture/"
 data_path = path + "/data/"
 loss_path = path + "/result_loss/"
 
-ITM_call= torch.Tensor(torch.load(data_path+'Call_ITM_modified_Heston.pt')).to(device=device)
-ITM_put= torch.Tensor(torch.load(data_path+'Put_ITM_modified_Heston.pt')).to(device=device)
-OTM_call= torch.Tensor(torch.load(data_path+'Call_OTM_modified_Heston.pt')).to(device=device)
-OTM_put = torch.Tensor(torch.load(data_path+'Put_OTM_modified_Heston.pt')).to(device=device)
+ITM_call= torch.Tensor(torch.load(data_path+'Call_ITM_modified_Heston_train.pt')).to(device=device)
+ITM_put= torch.Tensor(torch.load(data_path+'Put_ITM_modified_Heston_train.pt')).to(device=device)
+OTM_call= torch.Tensor(torch.load(data_path+'Call_OTM_modified_Heston_train.pt')).to(device=device)
+OTM_put = torch.Tensor(torch.load(data_path+'Put_OTM_modified_Heston_train.pt')).to(device=device)
 
 
 
@@ -155,9 +155,28 @@ z_2 = torch.tensor(z_2).to(device=device).float()
 pred = model(strikes_call, strikes_put,indices, z_1,z_2, 2*MC_samples).detach()
 pred_pro = model_pro(strikes_call, strikes_put,indices, z_1,z_2, 2*MC_samples).detach()
 
-loss_fn = nn.MSELoss() 
-print("The loss for nsde:    ",loss_fn(pred,target))
-print("The loss for nsde pro:    ",loss_fn(pred_pro,target))
+loss_fn = nn.L1Loss() 
+print("The train loss for nsde:    ",loss_fn(pred,target))
+print("The train loss for nsde pro:    ",loss_fn(pred_pro,target))
+
+strikes_put_test = np.arange(60, 101, 2.5).tolist()
+strikes_call_test = np.arange(100, 141, 2.5).tolist()
+pred_test = model(strikes_call_test, strikes_put_test,indices, z_1,z_2, 2*MC_samples).detach()
+pred_pro_test = model_pro(strikes_call_test, strikes_put_test,indices, z_1,z_2, 2*MC_samples).detach()
+
+ITM_call_test = torch.Tensor(torch.load(data_path+'Call_ITM_modified_Heston_test.pt')).to(device=device)
+OTM_call_test = torch.Tensor(torch.load(data_path+'Call_OTM_modified_Heston_test.pt')).to(device=device)
+target_test = torch.cat([OTM_call_test, ITM_call_test],0)
+
+nsde_test_loss = (loss_fn(pred_test,target_test)*target_test.shape[0]*target_test.shape[1]
+                  -loss_fn(pred,target)*target.shape[0]*target.shape[1])/\
+                 (target_test.shape[0]*target_test.shape[1]-target.shape[0]*target.shape[1])
+nsde_pro_test_loss = (loss_fn(pred_pro_test,target_test)*target_test.shape[0]*target_test.shape[1]
+                  -loss_fn(pred_pro,target)*target.shape[0]*target.shape[1])/\
+                 (target_test.shape[0]*target_test.shape[1]-target.shape[0]*target.shape[1])
+
+print("The test loss for nsde:  ",nsde_test_loss)
+print("The test loss for nsde pro:  ",nsde_pro_test_loss)
 
 ## save picture
 fig,ax = plt.subplots()
