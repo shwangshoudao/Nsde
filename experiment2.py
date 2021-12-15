@@ -171,7 +171,7 @@ model_pro,losses_pro, losses_val_pro=train_models(model_pro,target,n_steps,optio
 # save model
 np.save(loss_path+'ex2_nsde_pro_losses.npy', losses_pro)
 np.save(loss_path+'ex2_nsde_pro_losses_val.npy', losses_val_pro)
-torch.save(model_pro, model_path+"ex2_nsde.pth") 
+torch.save(model_pro, model_path+"ex2_nsde_pro.pth") 
 
 
 z_1 = np.random.normal(size=(MC_samples, n_steps))
