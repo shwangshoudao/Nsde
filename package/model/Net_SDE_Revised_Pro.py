@@ -5,7 +5,7 @@ from model import Net_Timestep
 
 class Net_SDE_Revised_Pro(nn.Module):
     
-    def __init__(self, asset_info,n_dim,n_layers, vNetWidth, MC_samples,device):
+    def __init__(self, heston_info,asset_info,n_dim,n_layers, vNetWidth, MC_samples,device):
         """SDE_PRO的模型
 
         Args:
@@ -25,6 +25,12 @@ class Net_SDE_Revised_Pro(nn.Module):
         self.S0 = asset_info[0]*torch.ones(1,1)
         self.V0 = asset_info[1]*torch.ones(1,1)
         self.rate = asset_info[2]*torch.ones(1,1)
+        
+        self.rho = heston_info[0]*torch.ones(1,1)
+        self.theta = heston_info[1]*torch.ones(1,1)
+        self.kappa = heston_info[2]*torch.ones(1,1)
+        self.lamdb = heston_info[3]*torch.ones(1,1)
+        
         self.MC_samples = MC_samples
         
         #Input to each coefficient (NN) will be (t,S_t,V_t)
@@ -62,11 +68,15 @@ class Net_SDE_Revised_Pro(nn.Module):
             current_time = (torch.ones(1, 1)*timegrid[i-1]).to(device=self.device)
             input_time  = torch.repeat_interleave(current_time, 2*self.MC_samples,dim=0).to(device=self.device)
             inputNN = torch.cat([input_time.reshape(2*self.MC_samples,1),S_old.float(), V_old.float(),rate.float()],1).to(device=self.device)
-            S_old = (S_old + self.driftS(inputNN)*h + self.diffusion(inputNN)*dW).float()
+            
+            S_old = (S_old + (self.driftS(inputNN)+S_old*self.rate)*h + \
+                (self.diffusion(inputNN)+S_old*torch.sqrt(V_old))*dW).float()
             S_old = torch.cat([S_old,zeros],1)
             S_old = torch.max(S_old,1,keepdim=True)[0]
             Sample_path = torch.cat([Sample_path,S_old],1)
-            V_old = V_old + self.driftV(inputNN)*h +self.diffusionV(inputNN)*dW1
+            
+            V_old = V_old + (self.driftV(inputNN)+self.kappa*(self.theta - V_old))*h +\
+                (self.diffusionV(inputNN)+self.lamdb )*dW1
             V_old = torch.cat([V_old,zeros],1)
             V_old = torch.max(V_old,1,keepdim=True)[0]
         
