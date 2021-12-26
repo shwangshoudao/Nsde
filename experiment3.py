@@ -74,69 +74,64 @@ x_test = test_data[:,0:2]
 Y_test = test_data[:,2]
 
 nsde_path = model_path + "ex3_nsde.pth"
+nsde_pro_path = model_path + "ex3_nsde_pro.pth"
+losses_val_nsde_path = loss_path+'ex3_nsde_losses_val.npy'
+losses_val_pro_path = loss_path+'ex3_nsde_pro_losses_val.npy'
 losses_val_nsde =[1000]
+losses_val_pro = [1000]
+
 S0 = 318.92
 V0 = 0.03
 rate = 0.06
 asset_info = [S0,V0,rate]
 
+if(not os.path.exists(nsde_path) or not os.path.exists(losses_val_nsde_path)):
+    model = Net_SDE_Revised(asset_info, 4,2,20,1000,device)
 
-model = Net_SDE_Revised(asset_info, 4,2,20,1000,device)
+    print("==="*10+"training the neural sde model"+"==="*10)
+    losses_val_nsde = train_models(model,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1),
+                x_train,nsde_path,losses_val_nsde)
+    np.save(loss_path+'ex3_nsde_losses_val.npy', losses_val_nsde) 
 
-print("==="*10+"training the neural sde model"+"==="*10)
-losses_val_nsde = train_models(model,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1),
-             x_train,nsde_path,losses_val_nsde)
-np.save(loss_path+'ex3_nsde_losses_val.npy', losses_val_nsde) 
+if(not os.path.exists(nsde_pro_path) or not os.path.exists(losses_val_pro_path)):
+    # heston calibration
+    asset_input = x_train[:,[1,0]].copy()
+    asset_input[:,0] = asset_input[:,0]/360
 
-asset_input = x_train[:,[1,0]].copy()
-asset_input[:,0] = asset_input[:,0]/360
+    def fun(x,asset_input,y):
+        return heston(S0,V0,rate,x,asset_input) - y
 
-def fun(x,asset_input,y):
-    return heston(S0,V0,rate,x,asset_input) - y
+    x0 = np.array([-0.3, 0.03, 1.3, 0.3])
 
+    res_lsq = res_lsq = least_squares(fun, x0, 
+                    bounds=([-1, -np.inf,-np.inf,-np.inf], [1,np.inf, np.inf, np.inf]),
+                    args=(asset_input, Y_train.ravel()))
+    heston_info = res_lsq.x
 
-
-x0 = np.array([-0.3, 0.03, 1.3, 0.3])
-
-
-#如果用了新的数据集请将这个注释删掉，调用下面的优化，同时删掉下面的赋值
-
-res_lsq = res_lsq = least_squares(fun, x0, 
-                bounds=([-1, -np.inf,-np.inf,-np.inf], [1,np.inf, np.inf, np.inf]),
-                args=(asset_input, Y_train.ravel()))
-heston_info = res_lsq.x
-
-#heston_info = [-0.7,1.3,1.2,0.5]
-
-losses_val_pro = [1000]
-nsde_pro_path = model_path + "ex3_nsde_pro.pth"
+    print( "*"*20,"The calibrated heston model params: \
+            rho = {},theta = {}, kappa = {} and lambda = {}".format(heston_info[0],heston_info[1],\
+            heston_info[2],heston_info[3]),"*"*20)
 
 
+    model_pro = Net_SDE_Revised_Pro(heston_info,asset_info, 4,2,20,1000,device)
 
-print( "*"*20,"The calibrated heston model params: \
-        rho = {},theta = {}, kappa = {} and lambda = {}".format(heston_info[0],heston_info[1],\
-        heston_info[2],heston_info[3]),"*"*20)
+    for layer in model_pro.modules():
+        if isinstance(layer, torch.nn.Linear):
+            torch.nn.init.constant_(layer.weight, val=0.0)
 
+    print("==="*10+"training the neural sde pro model"+"==="*10)
+    losses_val_pro = train_models(model,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1),
+                x_train,nsde_pro_path,losses_val_pro)
 
-model_pro = Net_SDE_Revised_Pro(heston_info,asset_info, 4,2,20,1000,device)
-
-for layer in model_pro.modules():
-    if isinstance(layer, torch.nn.Linear):
-        torch.nn.init.constant_(layer.weight, val=0.0)
-
-print("==="*10+"training the neural sde pro model"+"==="*10)
-losses_val_pro = train_models(model,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1),
-             x_train,nsde_pro_path,losses_val_pro)
-
-# save model
-np.save(loss_path+'ex3_nsde_pro_losses_val.npy', losses_val_pro) 
+    # save loss
+    np.save(loss_path+'ex3_nsde_pro_losses_val.npy', losses_val_pro) 
 
 
 #result
-nsde_path = model_path + "ex3_nsde.pth"
-nsde_pro_path = model_path + "ex3_nsde_pro.pth"
 model = torch.load(nsde_path)
 model_pro = torch.load(nsde_pro_path)
+losses_val_nsde = np.load(losses_val_nsde_path)
+losses_val_pro = np.load(losses_val_pro_path)
 
 pred = model(x_train).detach()
 pred_pro = model_pro(x_train).detach()
