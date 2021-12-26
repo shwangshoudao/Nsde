@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from model import Net_SDE_Revised,Net_SDE_Revised_Pro
 from generate import heston
 
+
 # training function
 def train_models(model,target,train_x,path,losses_val,seedused=1):
     """train nsde model
@@ -29,7 +30,7 @@ def train_models(model,target,train_x,path,losses_val,seedused=1):
     
     #optimizer = torch.optim.LBFGS(model.parameters(), lr=1, max_iter=20, max_eval=None, tolerance_grad=1e-07, tolerance_change=1e-09, history_size=100, line_search_fn=None)
     optimizer = torch.optim.Adam(model.parameters(),lr=0.01, eps=1e-08,amsgrad=False,betas=(0.9, 0.999), weight_decay=0 )
-    n_epochs = 600
+    n_epochs = 400
     
     for epoch in range(n_epochs):
 
@@ -66,7 +67,7 @@ origin_data["volume"] = origin_data["volume"].\
 origin_data = origin_data[origin_data["volume"]>=200]
 spy_data = origin_data.loc[:,["Time to Maturity","strike","last"]].astype(float).values
 
-train_data,test_data = train_test_split(spy_data,test_size=0.2,random_state=10)
+train_data,test_data = train_test_split(spy_data,test_size=0.2,random_state=42)
 x_train = train_data[:,0:2]
 Y_train = train_data[:,2]
 x_test = test_data[:,0:2]
@@ -78,6 +79,7 @@ S0 = 318.92
 V0 = 0.03
 rate = 0.06
 asset_info = [S0,V0,rate]
+
 
 model = Net_SDE_Revised(asset_info, 4,2,20,1000,device)
 
@@ -131,7 +133,8 @@ np.save(loss_path+'ex3_nsde_pro_losses_val.npy', losses_val_pro)
 
 
 #result
-
+nsde_path = model_path + "ex3_nsde.pth"
+nsde_pro_path = model_path + "ex3_nsde_pro.pth"
 model = torch.load(nsde_path)
 model_pro = torch.load(nsde_pro_path)
 
@@ -139,8 +142,8 @@ pred = model(x_train).detach()
 pred_pro = model_pro(x_train).detach()
 
 loss_fn = nn.L1Loss() 
-print("The train loss for nsde:    ",loss_fn(pred,torch.Tensor(Y_train)))
-print("The train loss for nsde pro:    ",loss_fn(pred_pro,torch.Tensor(Y_train)))
+print("The train loss for nsde:    ",loss_fn(pred,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1)))
+print("The train loss for nsde pro:    ",loss_fn(pred_pro,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1)))
 
 
 
@@ -148,8 +151,8 @@ pred_test = model(x_test).detach()
 pred_pro_test = model_pro(x_test).detach()
 
 
-nsde_test_loss = loss_fn(pred_test,torch.Tensor(Y_test))
-nsde_pro_test_loss = loss_fn(pred_pro_test,torch.Tensor(Y_test))
+nsde_test_loss = loss_fn(pred_test,torch.tensor(Y_test,dtype=torch.float32).view(len(Y_test),1))
+nsde_pro_test_loss = loss_fn(pred_pro_test,torch.tensor(Y_test,dtype=torch.float32).view(len(Y_test),1))
 print("The test loss for nsde:  ",nsde_test_loss)
 print("The test loss for nsde pro:  ",nsde_pro_test_loss)
 
