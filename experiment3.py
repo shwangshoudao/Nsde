@@ -140,11 +140,8 @@ loss_fn = nn.L1Loss()
 print("The train loss for nsde:    ",loss_fn(pred,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1)))
 print("The train loss for nsde pro:    ",loss_fn(pred_pro,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1)))
 
-
-
 pred_test = model(x_test).detach()
 pred_pro_test = model_pro(x_test).detach()
-
 
 nsde_test_loss = loss_fn(pred_test,torch.tensor(Y_test,dtype=torch.float32).view(len(Y_test),1))
 nsde_pro_test_loss = loss_fn(pred_pro_test,torch.tensor(Y_test,dtype=torch.float32).view(len(Y_test),1))
@@ -164,9 +161,3 @@ ax.plot(np.arange(1,401),losses_val_pro[1:401])
 ax.set(xlabel='iteration',ylabel='loss')
 ax.set_title('loss for NSDE_PRO')
 plt.savefig(picture_path+"ex3_NSDE_PRO_loss.png")
-
-
-
-
-
-
