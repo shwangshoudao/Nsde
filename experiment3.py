@@ -8,12 +8,12 @@ from scipy.optimize import least_squares
 import setenv
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
-from model import Net_SDE_Revised,Net_SDE_Revised_Pro
+from model import Net_SDE_Revised,Net_SDE_Revised_Pro,two_gate
 from generate import heston
 
 
 # training function
-def train_models(model,target,train_x,path,losses_val,seedused=1):
+def train_models(model,target,train_x,path,losses_val,n_epochs,seedused=1):
     """train nsde model
 
     Args:
@@ -30,7 +30,6 @@ def train_models(model,target,train_x,path,losses_val,seedused=1):
     
     #optimizer = torch.optim.LBFGS(model.parameters(), lr=1, max_iter=20, max_eval=None, tolerance_grad=1e-07, tolerance_change=1e-09, history_size=100, line_search_fn=None)
     optimizer = torch.optim.Adam(model.parameters(),lr=0.01, eps=1e-08,amsgrad=False,betas=(0.9, 0.999), weight_decay=0 )
-    n_epochs = 400
     
     for epoch in range(n_epochs):
 
@@ -75,10 +74,13 @@ Y_test = test_data[:,2]
 
 nsde_path = model_path + "ex3_nsde.pth"
 nsde_pro_path = model_path + "ex3_nsde_pro.pth"
+gate_path = model_path + "ex3_gated.pth"
 losses_val_nsde_path = loss_path+'ex3_nsde_losses_val.npy'
 losses_val_pro_path = loss_path+'ex3_nsde_pro_losses_val.npy'
+losses_val_gate_path = loss_path+'ex3_gate_losses_val.npy'
 losses_val_nsde =[1000]
 losses_val_pro = [1000]
+losses_val_gate = [1000]
 
 S0 = 318.92
 V0 = 0.03
@@ -90,7 +92,7 @@ if(not os.path.exists(nsde_path) or not os.path.exists(losses_val_nsde_path)):
 
     print("==="*10+"training the neural sde model"+"==="*10)
     losses_val_nsde = train_models(model,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1),
-                x_train,nsde_path,losses_val_nsde)
+                x_train,nsde_path,losses_val_nsde,400)
     np.save(loss_path+'ex3_nsde_losses_val.npy', losses_val_nsde) 
 
 if(not os.path.exists(nsde_pro_path) or not os.path.exists(losses_val_pro_path)):
@@ -120,34 +122,49 @@ if(not os.path.exists(nsde_pro_path) or not os.path.exists(losses_val_pro_path))
             torch.nn.init.constant_(layer.weight, val=0.0)
 
     print("==="*10+"training the neural sde pro model"+"==="*10)
-    losses_val_pro = train_models(model,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1),
-                x_train,nsde_pro_path,losses_val_pro)
+    losses_val_pro = train_models(model_pro,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1),
+                x_train,nsde_pro_path,losses_val_pro,400)
 
     # save loss
-    np.save(loss_path+'ex3_nsde_pro_losses_val.npy', losses_val_pro) 
+    np.save(losses_val_pro_path, losses_val_pro) 
 
+if(not os.path.exists(gate_path) or not os.path.exists(losses_val_gate_path)):
+    model_gate = two_gate(1,40)
+    print("==="*10+"training the two gate model"+"==="*10)
+    losses_val_gate = train_models(model_gate,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1),
+                x_train,gate_path,losses_val_gate,100000)
+    
+    # save loss
+    np.save(losses_val_gate_path, losses_val_gate) 
+
+    
 
 #result
 model = torch.load(nsde_path)
 model_pro = torch.load(nsde_pro_path)
+model_gate = torch.load(gate_path)
 losses_val_nsde = np.load(losses_val_nsde_path)
 losses_val_pro = np.load(losses_val_pro_path)
 
 pred = model(x_train).detach()
 pred_pro = model_pro(x_train).detach()
+pred_gate = model_gate(x_train).detach().view(len(x_train),1)
 
 loss_fn = nn.L1Loss() 
 print("The train loss for nsde:    ",loss_fn(pred,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1)))
 print("The train loss for nsde pro:    ",loss_fn(pred_pro,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1)))
+print("The train loss for gate:    ",loss_fn(pred_gate,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1)))
 
 pred_test = model(x_test).detach()
 pred_pro_test = model_pro(x_test).detach()
+pred_gate_test = model_gate(x_test).detach().view(len(x_test),1)
 
 nsde_test_loss = loss_fn(pred_test,torch.tensor(Y_test,dtype=torch.float32).view(len(Y_test),1))
 nsde_pro_test_loss = loss_fn(pred_pro_test,torch.tensor(Y_test,dtype=torch.float32).view(len(Y_test),1))
+gate_test_loss = loss_fn(pred_gate_test,torch.tensor(Y_test,dtype=torch.float32).view(len(Y_test),1))
 print("The test loss for nsde:  ",nsde_test_loss)
 print("The test loss for nsde pro:  ",nsde_pro_test_loss)
-
+print("The test loss for gate:  ",gate_test_loss)
 
 ## save picture
 fig,ax = plt.subplots()
@@ -161,3 +178,7 @@ ax.plot(np.arange(1,401),losses_val_pro[1:401])
 ax.set(xlabel='iteration',ylabel='loss')
 ax.set_title('loss for NSDE_PRO')
 plt.savefig(picture_path+"ex3_NSDE_PRO_loss.png")
+
+
+
+

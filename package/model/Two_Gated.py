@@ -34,6 +34,7 @@ class two_gate(nn.Module):
         Returns:
             n*1 array: option price
         """
+        S = torch.tensor(S,dtype=torch.float32)
         a = self.m_h(S[:,0].view(-1,1))
         b = self.t_h(S[:,1].view(-1,1))
         output = (a*b).sum(axis=1)
