@@ -73,7 +73,7 @@ class Net_SDE_Revised(nn.Module):
         for i in range(len(x)):
             strike = x[i,1]*torch.ones(1,1)
             strike_extend = torch.repeat_interleave(strike, 2*self.MC_samples, dim=0).to(device=self.device)
-            S_now = Sample_path[:,int(x[i,0])]
+            S_now = Sample_path[:,int(x[i,0])].view(2*self.MC_samples,1) 
             price = torch.cat([S_now-strike_extend,zeros],1)
             price = torch.max(price, 1, keepdim=True)[0]*torch.exp(-self.rate*x[i,0]/360) 
             price = torch.nanmean(price.mean()).view(1,1)

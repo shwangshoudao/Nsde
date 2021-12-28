@@ -52,7 +52,7 @@ class Net_SDE_Revised_Pro(nn.Module):
         timegrid = torch.linspace(0,int(x[:,0].max())/360,int(x[:,0].max()+1))
         h = (timegrid[1]-timegrid[0]).to(device=self.device)
         n_steps = len(timegrid)-1
-        
+        np.random.seed(42)
         z = torch.randn(self.MC_samples,n_steps)
         z1 = torch.randn(self.MC_samples,n_steps)
         z1 = -0.5*z + np.sqrt(0.75)*z1
@@ -84,7 +84,7 @@ class Net_SDE_Revised_Pro(nn.Module):
         for i in range(len(x)):
             strike = x[i,1]*torch.ones(1,1)
             strike_extend = torch.repeat_interleave(strike, 2*self.MC_samples, dim=0).to(device=self.device)
-            S_now = Sample_path[:,int(x[i,0])]
+            S_now = Sample_path[:,int(x[i,0])].view(2*self.MC_samples,1)
             price = torch.cat([S_now-strike_extend,zeros],1)
             price = torch.max(price, 1, keepdim=True)[0]*torch.exp(-self.rate*x[i,0]/360) 
             price = torch.nanmean(price.mean()).view(1,1)
