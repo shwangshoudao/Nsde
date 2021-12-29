@@ -29,7 +29,7 @@ def train_models(model,target,train_x,path,losses_val,n_epochs,seedused=1):
     #evaluate and print RMSE validation error at the start of each epoch
     
     #optimizer = torch.optim.LBFGS(model.parameters(), lr=1, max_iter=20, max_eval=None, tolerance_grad=1e-07, tolerance_change=1e-09, history_size=100, line_search_fn=None)
-    optimizer = torch.optim.Adam(model.parameters(),lr=0.01, eps=1e-08,amsgrad=False,betas=(0.9, 0.999), weight_decay=0 )
+    optimizer = torch.optim.Adam(model.parameters(),lr=0.001, eps=1e-08,amsgrad=False,betas=(0.9, 0.999), weight_decay=0 )
     
     for epoch in range(n_epochs):
 
@@ -128,16 +128,17 @@ if(not os.path.exists(nsde_pro_path) or not os.path.exists(losses_val_pro_path))
     # save loss
     np.save(losses_val_pro_path, losses_val_pro) 
 
+
+
 if(not os.path.exists(gate_path) or not os.path.exists(losses_val_gate_path)):
-    model_gate = two_gate(1,40)
+    model_gate = two_gate(1,30)
     print("==="*10+"training the two gate model"+"==="*10)
-    losses_val_gate = train_models(model_gate,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1),
+    losses_val_gate = train_models(model_gate,torch.tensor(Y_train,dtype=torch.float32),
                 x_train,gate_path,losses_val_gate,100000)
     
     # save loss
     np.save(losses_val_gate_path, losses_val_gate) 
 
-    
 
 #result
 model = torch.load(nsde_path)
