@@ -97,7 +97,7 @@ if(not os.path.exists(nsde_path) or not os.path.exists(losses_val_nsde_path)):
 
 if(not os.path.exists(nsde_pro_path) or not os.path.exists(losses_val_pro_path)):
     # heston calibration
-    asset_input = x_train[:,[1,0]].copy()
+    asset_input = x_train.copy()
     asset_input[:,0] = asset_input[:,0]/360
 
     def fun(x,asset_input,y):

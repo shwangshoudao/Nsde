@@ -137,7 +137,7 @@ indices = torch.tensor([30,60,90,120,150,180,240,270,300,360])
 asset_input = []
 for j in range(len(indices)):
     for i in range(len(strikes_all)):
-        asset_input.append([strikes_all[i],indices.numpy()[j]])
+        asset_input.append([indices.numpy()[j], strikes_all[i]])
 
 def fun(x,asset_input,y):
     return heston(S0,V0,r,x,asset_input) - y
