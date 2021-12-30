@@ -13,12 +13,17 @@ from generate import heston
 
 
 # training function
-def train_models(model,target,train_x,path,losses_val,n_epochs,seedused=1):
+def train_models(model,target,train_x,path,losses_val,n_epochs,lr,seedused=1):
     """train nsde model
 
     Args:
         model (torch.model): nsde model  
         target (np.numpy): 真实期权价格，用于做训练
+        train_x(np.numpy): 用于训练的的数据，第一列到期日，第二列行权价格
+        path(str): 存储model的path
+        losses_val(list): 记录loss的list
+        n_epochs(int): 做多少个epoch的训练
+        lr(float): 优化器的学习率
         seedused (int, optional): 随机种子. Defaults to 1.
     """
     loss_fn = nn.MSELoss() 
@@ -88,8 +93,7 @@ rate = 0.06
 asset_info = [S0,V0,rate]
 
 if(not os.path.exists(nsde_path) or not os.path.exists(losses_val_nsde_path)):
-    model = Net_SDE_Revised(asset_info, 4,2,20,1000,device)
-
+    model = Net_SDE_Revised(asset_info, 4,2,20,1000,NNc,device)
     print("==="*10+"training the neural sde model"+"==="*10)
     losses_val_nsde = train_models(model,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1),
                 x_train,nsde_path,losses_val_nsde,400)

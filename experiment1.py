@@ -52,7 +52,7 @@ def train_models(model,target,n_steps,option_info,indices,MC_samples,seedused=1)
 #evaluate and print RMSE validation error at the start of each epoch
         optimizer.zero_grad()
         pred = model(strikes_call, strikes_put, indices, z_1,z_2, 2*MC_samples).detach()
-        loss_val=torch.sqrt(loss_fn(pred, target))
+        loss_val = torch.sqrt(loss_fn(pred, target))
         print('validation {}, loss={}'.format(itercount, loss_val.item()))
 
 #store the erorr value
