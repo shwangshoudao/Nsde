@@ -19,5 +19,5 @@ for filename in os.listdir(data_path):
     origin_data = origin_data[origin_data["lastTradeDate"].between(str(file_date_before),str(file_date))]
     revised_data = origin_data.loc[:,["strike","Maturity","lastPrice","volume"]]
     revised_data["Maturity"] = revised_data["Maturity"] + 1
-    revised_data.reset_index(inplace=True)
+    revised_data.index = list(range(len(revised_data)))
     revised_data.to_excel(data_path+"/"+filename[:-5]+"_revised"+".xlsx")
