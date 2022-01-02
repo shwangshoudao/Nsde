@@ -134,7 +134,7 @@ if(not os.path.exists(aapl_nsde_path) or not os.path.exists(losses_val_aapl_nsde
     print("==="*10+"training the neural sde model"+"==="*10)
     losses_val_nsde = train_models(model,torch.tensor(aapl_Y_train,dtype=torch.float32).view(len(aapl_Y_train),1),
                 aapl_x_train,aapl_nsde_path,losses_val_aapl_nsde,400,0.01)
-    np.save(loss_path+'ex3_nsde_losses_val.npy', losses_val_nsde) 
+    np.save(losses_val_aapl_nsde_path, losses_val_nsde) 
 
 if(not os.path.exists(aapl_nsde_pro_path) or not os.path.exists(losses_val_aapl_pro_path)):
     # heston calibration
@@ -175,7 +175,7 @@ if(not os.path.exists(amzn_nsde_path) or not os.path.exists(losses_val_amzn_nsde
     print("==="*10+"training the neural sde model"+"==="*10)
     losses_val_nsde = train_models(model,torch.tensor(amzn_Y_train,dtype=torch.float32).view(len(amzn_Y_train),1),
                 amzn_x_train,amzn_nsde_path,losses_val_amzn_nsde,400,0.01)
-    np.save(loss_path+'ex3_nsde_losses_val.npy', losses_val_nsde) 
+    np.save(losses_val_amzn_nsde_path, losses_val_nsde) 
 
 if(not os.path.exists(amzn_nsde_pro_path) or not os.path.exists(losses_val_amzn_pro_path)):
     # heston calibration
@@ -216,7 +216,7 @@ if(not os.path.exists(spy_nsde_path) or not os.path.exists(losses_val_spy_nsde_p
     print("==="*10+"training the neural sde model"+"==="*10)
     losses_val_nsde = train_models(model,torch.tensor(spy_Y_train,dtype=torch.float32).view(len(spy_Y_train),1),
                 spy_x_train,spy_nsde_path,losses_val_spy_nsde,400,0.01)
-    np.save(loss_path+'ex3_nsde_losses_val.npy', losses_val_nsde) 
+    np.save(losses_val_spy_nsde_path, losses_val_nsde) 
 
 if(not os.path.exists(spy_nsde_pro_path) or not os.path.exists(losses_val_spy_pro_path)):
     # heston calibration

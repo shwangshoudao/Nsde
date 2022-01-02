@@ -97,7 +97,7 @@ if(not os.path.exists(nsde_path) or not os.path.exists(losses_val_nsde_path)):
     print("==="*10+"training the neural sde model"+"==="*10)
     losses_val_nsde = train_models(model,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1),
                 x_train,nsde_path,losses_val_nsde,400,0.01)
-    np.save(loss_path+'ex3_nsde_losses_val.npy', losses_val_nsde) 
+    np.save(losses_val_nsde_path, losses_val_nsde) 
 
 if(not os.path.exists(nsde_pro_path) or not os.path.exists(losses_val_pro_path)):
     # heston calibration
