@@ -34,7 +34,7 @@ def train_models(model,target,train_x,path,losses_val,n_epochs,lr,seedused=1):
     #evaluate and print RMSE validation error at the start of each epoch
     
     #optimizer = torch.optim.LBFGS(model.parameters(), lr=1, max_iter=20, max_eval=None, tolerance_grad=1e-07, tolerance_change=1e-09, history_size=100, line_search_fn=None)
-    optimizer = torch.optim.Adam(model.parameters(),lr=0.001, eps=1e-08,amsgrad=False,betas=(0.9, 0.999), weight_decay=0 )
+    optimizer = torch.optim.Adam(model.parameters(),lr=lr, eps=1e-08,amsgrad=False,betas=(0.9, 0.999), weight_decay=0 )
     
     for epoch in range(n_epochs):
 
@@ -93,10 +93,10 @@ rate = 0.06
 asset_info = [S0,V0,rate]
 
 if(not os.path.exists(nsde_path) or not os.path.exists(losses_val_nsde_path)):
-    model = Net_SDE_Revised(asset_info, 4,2,20,1000,NNc,device)
+    model = Net_SDE_Revised(asset_info, 4,2,20,1000,device)
     print("==="*10+"training the neural sde model"+"==="*10)
     losses_val_nsde = train_models(model,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1),
-                x_train,nsde_path,losses_val_nsde,400)
+                x_train,nsde_path,losses_val_nsde,400,0.01)
     np.save(loss_path+'ex3_nsde_losses_val.npy', losses_val_nsde) 
 
 if(not os.path.exists(nsde_pro_path) or not os.path.exists(losses_val_pro_path)):
@@ -127,7 +127,7 @@ if(not os.path.exists(nsde_pro_path) or not os.path.exists(losses_val_pro_path))
 
     print("==="*10+"training the neural sde pro model"+"==="*10)
     losses_val_pro = train_models(model_pro,torch.tensor(Y_train,dtype=torch.float32).view(len(Y_train),1),
-                x_train,nsde_pro_path,losses_val_pro,400)
+                x_train,nsde_pro_path,losses_val_pro,400,0.01)
 
     # save loss
     np.save(losses_val_pro_path, losses_val_pro) 
@@ -138,7 +138,7 @@ if(not os.path.exists(gate_path) or not os.path.exists(losses_val_gate_path)):
     model_gate = two_gate(1,30)
     print("==="*10+"training the two gate model"+"==="*10)
     losses_val_gate = train_models(model_gate,torch.tensor(Y_train,dtype=torch.float32),
-                x_train,gate_path,losses_val_gate,100000)
+                x_train,gate_path,losses_val_gate,100000,0.001)
     
     # save loss
     np.save(losses_val_gate_path, losses_val_gate) 
@@ -183,7 +183,3 @@ ax.plot(np.arange(1,401),losses_val_pro[1:401])
 ax.set(xlabel='iteration',ylabel='loss')
 ax.set_title('loss for NSDE_PRO')
 plt.savefig(picture_path+"ex3_NSDE_PRO_loss.png")
-
-
-
-
